@@ -1,0 +1,1397 @@
+<!DOCTYPE html>
+<html lang="uz">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Kutubxona Kartotekasi — Elektron reestr</title>
+
+  <!-- Google Fonts: Newsreader (serif), Inter (sans), JetBrains Mono (mono) -->
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link
+    href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&family=Newsreader:ital,opsz,wght@0,6..72,500;0,6..72,600;1,6..72,400&display=swap"
+    rel="stylesheet"
+  />
+
+  <!-- Tailwind CSS -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            paper: '#F5F2EB',
+            sheet: '#FCFBF8',
+            rule: '#DDD7CA',
+            ink: '#1A1918',
+            muted: '#69645B',
+            forest: {
+              DEFAULT: '#1E463A',
+              hover: '#15332A',
+              soft: '#E8F2EE',
+            },
+            terracotta: {
+              DEFAULT: '#9A3412',
+              soft: '#FDEEE8',
+            },
+          },
+          fontFamily: {
+            serif: ['Newsreader', 'Georgia', 'serif'],
+            sans: ['Inter', 'system-ui', '-apple-system', 'sans-serif'],
+            mono: ['JetBrains Mono', 'ui-monospace', 'monospace'],
+          },
+          borderRadius: {
+            card: '6px',
+            ctrl: '4px',
+          },
+        },
+      },
+    };
+  </script>
+</head>
+<body class="bg-paper text-ink font-sans antialiased min-h-screen flex flex-col border-t-4 border-forest">
+
+  <!-- Yuqori sarlavha va statistika paneli -->
+  <header class="bg-sheet border-b border-rule">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-5 sm:py-6">
+      <div class="flex flex-col lg:flex-row lg:items-end lg:justify-between gap-5">
+
+        <!-- Kutubxona nomi va izohi -->
+        <div class="flex items-start gap-3.5">
+          <div class="mt-1 p-2 rounded-ctrl border border-rule bg-paper text-forest shrink-0" aria-hidden="true">
+            <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M4 19.5v-15A2.5 2.5 0 0 1 6.5 2H20v20H6.5a2.5 2.5 0 0 1 0-5H20" />
+              <path d="M8 7h8" />
+              <path d="M8 11h6" />
+            </svg>
+          </div>
+          <div>
+            <p class="text-[11px] uppercase tracking-[0.14em] text-muted font-medium">
+              Elektron reestr
+            </p>
+            <h1 class="font-serif text-2xl sm:text-3xl font-semibold tracking-tight text-ink leading-tight mt-0.5">
+              Kutubxona Kartotekasi
+            </h1>
+          </div>
+        </div>
+
+        <!-- Chiziqli statistika ko'rsatkichlari -->
+        <div class="grid grid-cols-3 border border-rule rounded-ctrl bg-paper/60 divide-x divide-rule">
+          <div class="px-3.5 sm:px-5 py-2.5">
+            <p class="text-[11px] uppercase tracking-wider text-muted">Kitoblar fondi</p>
+            <div class="mt-1 flex items-baseline gap-1.5 flex-wrap">
+              <span id="stat-book-titles" class="font-mono text-lg sm:text-xl font-medium text-ink">0</span>
+              <span class="text-xs text-muted">nom</span>
+              <span class="text-rule">/</span>
+              <span id="stat-book-copies" class="font-mono text-sm text-forest font-medium">0</span>
+              <span class="text-xs text-muted">nusxa</span>
+            </div>
+          </div>
+
+          <div class="px-3.5 sm:px-5 py-2.5">
+            <p class="text-[11px] uppercase tracking-wider text-muted">O‘quvchilar</p>
+            <div class="mt-1 flex items-baseline gap-1.5">
+              <span id="stat-members" class="font-mono text-lg sm:text-xl font-medium text-ink">0</span>
+              <span class="text-xs text-muted">nafar</span>
+            </div>
+          </div>
+
+          <div class="px-3.5 sm:px-5 py-2.5">
+            <p class="text-[11px] uppercase tracking-wider text-muted">Hozir qo‘lda</p>
+            <div class="mt-1 flex items-baseline gap-1.5">
+              <span id="stat-active-borrows" class="font-mono text-lg sm:text-xl font-medium text-terracotta">0</span>
+              <span class="text-xs text-muted">kitob</span>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+
+    <!-- Bo'limlar navigatsiyasi (Tablar) -->
+    <nav class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 border-t border-rule/70" aria-label="Asosiy bo‘limlar">
+      <div class="flex items-center justify-between gap-4 overflow-x-auto">
+        <div class="flex items-center gap-1 sm:gap-6" role="tablist">
+          <button
+            type="button"
+            role="tab"
+            id="tab-btn-borrows"
+            data-tab="borrows"
+            aria-selected="true"
+            class="tab-btn whitespace-nowrap inline-flex items-center gap-2 py-3.5 px-2 sm:px-1 text-sm font-medium border-b-2 border-forest text-forest transition-colors"
+          >
+            <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
+              <polyline points="14 2 14 8 20 8" />
+              <line x1="16" y1="13" x2="8" y2="13" />
+              <line x1="16" y1="17" x2="8" y2="17" />
+            </svg>
+            <span>Ijara jurnali</span>
+            <span id="badge-active-borrows" class="font-mono text-[11px] px-1.5 py-0.5 rounded-ctrl bg-terracotta-soft text-terracotta">0</span>
+          </button>
+
+          <button
+            type="button"
+            role="tab"
+            id="tab-btn-books"
+            data-tab="books"
+            aria-selected="false"
+            class="tab-btn whitespace-nowrap inline-flex items-center gap-2 py-3.5 px-2 sm:px-1 text-sm font-medium border-b-2 border-transparent text-muted hover:text-ink transition-colors"
+          >
+            <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z" />
+              <path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z" />
+            </svg>
+            <span>Kitoblar fondi</span>
+            <span id="badge-books" class="font-mono text-[11px] px-1.5 py-0.5 rounded-ctrl bg-paper text-muted border border-rule">0</span>
+          </button>
+
+          <button
+            type="button"
+            role="tab"
+            id="tab-btn-members"
+            data-tab="members"
+            aria-selected="false"
+            class="tab-btn whitespace-nowrap inline-flex items-center gap-2 py-3.5 px-2 sm:px-1 text-sm font-medium border-b-2 border-transparent text-muted hover:text-ink transition-colors"
+          >
+            <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" />
+              <circle cx="9" cy="7" r="4" />
+              <path d="M23 21v-2a4 4 0 0 0-3-3.87" />
+              <path d="M16 3.13a4 4 0 0 1 0 7.75" />
+            </svg>
+            <span>O‘quvchilar</span>
+            <span id="badge-members" class="font-mono text-[11px] px-1.5 py-0.5 rounded-ctrl bg-paper text-muted border border-rule">0</span>
+          </button>
+        </div>
+
+        <div class="hidden md:flex items-center gap-2 text-xs text-muted font-mono shrink-0">
+          <span id="today-date-label"></span>
+        </div>
+      </div>
+    </nav>
+  </header>
+
+  <!-- Asosiy kontent -->
+  <main class="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-8">
+
+    <!-- ==================== 1-BO'LIM: IJARA JURNALI (Borrow) ==================== -->
+    <section id="panel-borrows" role="tabpanel" class="tab-panel grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
+
+      <!-- Chap ustun: Kitob berish formasi -->
+      <aside class="lg:col-span-4 bg-sheet border border-rule rounded-card p-5">
+        <div class="pb-3.5 mb-4 border-b border-rule">
+          <h2 class="font-serif text-xl font-semibold text-ink">Kitob berish</h2>
+          <p class="text-xs text-muted mt-1">
+            Yangi ijara yozuvini rasmiylashtirish. Kitob berilganda fonddagi nusxa soni avtomatik kamayadi.
+          </p>
+        </div>
+
+        <form id="borrow-form" class="space-y-4">
+          <div>
+            <label for="borrow-member-select" class="block text-xs font-medium uppercase tracking-wider text-muted mb-1.5">
+              O‘quvchi
+            </label>
+            <select
+              id="borrow-member-select"
+              required
+              class="w-full px-3 py-2.5 text-sm bg-paper/50 border border-rule rounded-ctrl text-ink focus:outline-none focus:border-forest focus:bg-sheet transition-colors"
+            >
+              <!-- JS orqali to'ldiriladi -->
+            </select>
+          </div>
+
+          <div>
+            <label for="borrow-book-select" class="block text-xs font-medium uppercase tracking-wider text-muted mb-1.5">
+              Kitob
+            </label>
+            <select
+              id="borrow-book-select"
+              required
+              class="w-full px-3 py-2.5 text-sm bg-paper/50 border border-rule rounded-ctrl text-ink focus:outline-none focus:border-forest focus:bg-sheet transition-colors"
+            >
+              <!-- JS orqali to'ldiriladi -->
+            </select>
+            <p class="text-[11px] text-muted mt-1.5">
+              Qolgan nusxasi 0 bo‘lgan kitoblarni tanlab bo‘lmaydi.
+            </p>
+          </div>
+
+          <button
+            type="submit"
+            class="w-full inline-flex items-center justify-center gap-2 px-4 py-2.5 bg-forest hover:bg-forest-hover text-sheet text-sm font-medium rounded-ctrl transition-colors cursor-pointer"
+          >
+            <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M5 12h14" />
+              <path d="M12 5v14" />
+            </svg>
+            <span>Ijaraga berish</span>
+          </button>
+        </form>
+      </aside>
+
+      <!-- O'ng ustun: Ijara yozuvlari jadvali -->
+      <div class="lg:col-span-8 bg-sheet border border-rule rounded-card overflow-hidden">
+        <!-- Filtr va qidiruv paneli -->
+        <div class="p-4 sm:p-5 border-b border-rule flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+          <div class="inline-flex border border-rule rounded-ctrl bg-paper/70 p-0.5 self-start" role="group" aria-label="Holat bo‘yicha filtr">
+            <button type="button" data-filter="all" class="borrow-filter-btn px-3 py-1.5 text-xs font-medium rounded-[3px] bg-sheet text-ink border border-rule transition-colors">
+              Barchasi
+            </button>
+            <button type="button" data-filter="active" class="borrow-filter-btn px-3 py-1.5 text-xs font-medium rounded-[3px] text-muted hover:text-ink border border-transparent transition-colors">
+              Qo‘lda
+            </button>
+            <button type="button" data-filter="returned" class="borrow-filter-btn px-3 py-1.5 text-xs font-medium rounded-[3px] text-muted hover:text-ink border border-transparent transition-colors">
+              Qaytarilgan
+            </button>
+          </div>
+
+          <div class="relative w-full sm:w-64">
+            <svg class="w-4 h-4 text-muted absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">
+              <circle cx="11" cy="11" r="8" />
+              <line x1="21" y1="21" x2="16.65" y2="16.65" />
+            </svg>
+            <input
+              type="text"
+              id="borrow-search"
+              placeholder="O‘quvchi yoki kitob qidirish..."
+              class="w-full pl-9 pr-3 py-2 text-sm bg-paper/50 border border-rule rounded-ctrl text-ink placeholder:text-muted/80 focus:outline-none focus:border-forest focus:bg-sheet transition-colors"
+            />
+          </div>
+        </div>
+
+        <!-- Jadval -->
+        <div class="overflow-x-auto">
+          <table class="w-full text-left border-collapse">
+            <thead>
+              <tr class="border-b border-rule bg-paper/60 text-[11px] uppercase tracking-wider text-muted">
+                <th class="py-3 px-4 font-medium">O‘quvchi</th>
+                <th class="py-3 px-4 font-medium">Kitob</th>
+                <th class="py-3 px-4 font-medium whitespace-nowrap">Olingan sana</th>
+                <th class="py-3 px-4 font-medium">Holat</th>
+                <th class="py-3 px-4 font-medium text-right">Amal</th>
+              </tr>
+            </thead>
+            <tbody id="borrows-table-body" class="divide-y divide-rule text-sm">
+              <!-- JS orqali to'ldiriladi -->
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+    <!-- ==================== 2-BO'LIM: KITOBLAR FONDI (Book) ==================== -->
+    <section id="panel-books" role="tabpanel" class="tab-panel hidden grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
+
+      <!-- Chap ustun: Yangi kitob qo'shish -->
+      <aside class="lg:col-span-4 bg-sheet border border-rule rounded-card p-5">
+        <div class="pb-3.5 mb-4 border-b border-rule">
+          <h2 class="font-serif text-xl font-semibold text-ink">Yangi kitob kiritish</h2>
+          <p class="text-xs text-muted mt-1">
+            Kutubxona katalogiga yangi nashr va uning nusxalar sonini ro‘yxatga olish.
+          </p>
+        </div>
+
+        <form id="book-form" class="space-y-4">
+          <div>
+            <label for="book-title" class="block text-xs font-medium uppercase tracking-wider text-muted mb-1.5">
+              Kitob nomi
+            </label>
+            <input
+              type="text"
+              id="book-title"
+              maxlength="200"
+              required
+              placeholder="Masalan: Mehrobdan chayon"
+              class="w-full px-3 py-2.5 text-sm bg-paper/50 border border-rule rounded-ctrl text-ink placeholder:text-muted/70 focus:outline-none focus:border-forest focus:bg-sheet transition-colors"
+            />
+          </div>
+
+          <div>
+            <label for="book-author" class="block text-xs font-medium uppercase tracking-wider text-muted mb-1.5">
+              Muallif
+            </label>
+            <input
+              type="text"
+              id="book-author"
+              maxlength="100"
+              required
+              placeholder="Masalan: Abdulla Qodiriy"
+              class="w-full px-3 py-2.5 text-sm bg-paper/50 border border-rule rounded-ctrl text-ink placeholder:text-muted/70 focus:outline-none focus:border-forest focus:bg-sheet transition-colors"
+            />
+          </div>
+
+          <div>
+            <label for="book-quantity" class="block text-xs font-medium uppercase tracking-wider text-muted mb-1.5">
+              Nusxalar soni
+            </label>
+            <input
+              type="number"
+              id="book-quantity"
+              min="0"
+              max="999"
+              value="1"
+              required
+              class="w-full px-3 py-2.5 text-sm font-mono bg-paper/50 border border-rule rounded-ctrl text-ink focus:outline-none focus:border-forest focus:bg-sheet transition-colors"
+            />
+          </div>
+
+          <button
+            type="submit"
+            class="w-full inline-flex items-center justify-center gap-2 px-4 py-2.5 bg-forest hover:bg-forest-hover text-sheet text-sm font-medium rounded-ctrl transition-colors cursor-pointer"
+          >
+            <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M5 12h14" />
+              <path d="M12 5v14" />
+            </svg>
+            <span>Fondga qo‘shish</span>
+          </button>
+        </form>
+      </aside>
+
+      <!-- O'ng ustun: Kitoblar jadvali -->
+      <div class="lg:col-span-8 bg-sheet border border-rule rounded-card overflow-hidden">
+        <div class="p-4 sm:p-5 border-b border-rule flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+          <div>
+            <h3 class="font-serif text-lg font-semibold text-ink">Katalog ro‘yxati</h3>
+            <p class="text-xs text-muted">Mavjud nusxalar sonini bevosita jadvaldan o‘zgartirish mumkin</p>
+          </div>
+
+          <div class="relative w-full sm:w-64">
+            <svg class="w-4 h-4 text-muted absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">
+              <circle cx="11" cy="11" r="8" />
+              <line x1="21" y1="21" x2="16.65" y2="16.65" />
+            </svg>
+            <input
+              type="text"
+              id="book-search"
+              placeholder="Nomi yoki muallif bo‘yicha..."
+              class="w-full pl-9 pr-3 py-2 text-sm bg-paper/50 border border-rule rounded-ctrl text-ink placeholder:text-muted/80 focus:outline-none focus:border-forest focus:bg-sheet transition-colors"
+            />
+          </div>
+        </div>
+
+        <div class="overflow-x-auto">
+          <table class="w-full text-left border-collapse">
+            <thead>
+              <tr class="border-b border-rule bg-paper/60 text-[11px] uppercase tracking-wider text-muted">
+                <th class="py-3 px-4 font-medium">Kitob nomi</th>
+                <th class="py-3 px-4 font-medium">Muallif</th>
+                <th class="py-3 px-4 font-medium whitespace-nowrap">Mavjud soni</th>
+                <th class="py-3 px-4 font-medium text-right">Amal</th>
+              </tr>
+            </thead>
+            <tbody id="books-table-body" class="divide-y divide-rule text-sm">
+              <!-- JS orqali to'ldiriladi -->
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+    <!-- ==================== 3-BO'LIM: O'QUVCHILAR (Member) ==================== -->
+    <section id="panel-members" role="tabpanel" class="tab-panel hidden grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
+
+      <!-- Chap ustun: Yangi o'quvchi qo'shish -->
+      <aside class="lg:col-span-4 bg-sheet border border-rule rounded-card p-5">
+        <div class="pb-3.5 mb-4 border-b border-rule">
+          <h2 class="font-serif text-xl font-semibold text-ink">Yangi o‘quvchi</h2>
+          <p class="text-xs text-muted mt-1">
+            Kitobxon a’zolik kartochkasini ochish va aloqa ma’lumotlarini saqlash.
+          </p>
+        </div>
+
+        <form id="member-form" class="space-y-4">
+          <div>
+            <label for="member-name" class="block text-xs font-medium uppercase tracking-wider text-muted mb-1.5">
+              Ism va familiya
+            </label>
+            <input
+              type="text"
+              id="member-name"
+              maxlength="100"
+              required
+              placeholder="Masalan: Dilshod Tursunov"
+              class="w-full px-3 py-2.5 text-sm bg-paper/50 border border-rule rounded-ctrl text-ink placeholder:text-muted/70 focus:outline-none focus:border-forest focus:bg-sheet transition-colors"
+            />
+          </div>
+
+          <div>
+            <label for="member-phone" class="block text-xs font-medium uppercase tracking-wider text-muted mb-1.5">
+              Telefon raqami
+            </label>
+            <input
+              type="tel"
+              id="member-phone"
+              maxlength="20"
+              required
+              placeholder="+998 90 000 00 00"
+              class="w-full px-3 py-2.5 text-sm font-mono bg-paper/50 border border-rule rounded-ctrl text-ink placeholder:text-muted/70 focus:outline-none focus:border-forest focus:bg-sheet transition-colors"
+            />
+          </div>
+
+          <button
+            type="submit"
+            class="w-full inline-flex items-center justify-center gap-2 px-4 py-2.5 bg-forest hover:bg-forest-hover text-sheet text-sm font-medium rounded-ctrl transition-colors cursor-pointer"
+          >
+            <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M5 12h14" />
+              <path d="M12 5v14" />
+            </svg>
+            <span>Ro‘yxatga olish</span>
+          </button>
+        </form>
+      </aside>
+
+      <!-- O'ng ustun: O'quvchilar jadvali -->
+      <div class="lg:col-span-8 bg-sheet border border-rule rounded-card overflow-hidden">
+        <div class="p-4 sm:p-5 border-b border-rule flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+          <div>
+            <h3 class="font-serif text-lg font-semibold text-ink">A’zolar reestri</h3>
+            <p class="text-xs text-muted">Ro‘yxatdan o‘tgan kitobxonlar va ularning joriy ijaralari</p>
+          </div>
+
+          <div class="relative w-full sm:w-64">
+            <svg class="w-4 h-4 text-muted absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">
+              <circle cx="11" cy="11" r="8" />
+              <line x1="21" y1="21" x2="16.65" y2="16.65" />
+            </svg>
+            <input
+              type="text"
+              id="member-search"
+              placeholder="Ism yoki telefon bo‘yicha..."
+              class="w-full pl-9 pr-3 py-2 text-sm bg-paper/50 border border-rule rounded-ctrl text-ink placeholder:text-muted/80 focus:outline-none focus:border-forest focus:bg-sheet transition-colors"
+            />
+          </div>
+        </div>
+
+        <div class="overflow-x-auto">
+          <table class="w-full text-left border-collapse">
+            <thead>
+              <tr class="border-b border-rule bg-paper/60 text-[11px] uppercase tracking-wider text-muted">
+                <th class="py-3 px-4 font-medium">Ism familiya</th>
+                <th class="py-3 px-4 font-medium">Telefon</th>
+                <th class="py-3 px-4 font-medium whitespace-nowrap">Qo‘lidagi kitoblar</th>
+                <th class="py-3 px-4 font-medium text-right">Amal</th>
+              </tr>
+            </thead>
+            <tbody id="members-table-body" class="divide-y divide-rule text-sm">
+              <!-- JS orqali to'ldiriladi -->
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+  </main>
+
+  <!-- Pastki qism -->
+  <footer class="border-t border-rule bg-sheet/70 mt-auto">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 flex flex-col sm:flex-row items-center justify-between gap-2 text-xs text-muted">
+      <p>Kutubxona Kartotekasi — ma’lumotlar brauzer xotirasida (<span class="font-mono">localStorage</span>) saqlanadi.</p>
+      <button
+        type="button"
+        id="reset-demo-btn"
+        class="underline underline-offset-4 hover:text-ink transition-colors cursor-pointer"
+      >
+        Boshlang‘ich namuna ma’lumotlarini tiklash
+      </button>
+    </div>
+  </footer>
+
+  <!-- Tasdiqlash oynasi (alert/confirm o'rniga maxsus modal) -->
+  <div
+    id="confirm-modal"
+    class="fixed inset-0 z-50 hidden items-center justify-center bg-ink/40 p-4"
+    role="dialog"
+    aria-modal="true"
+    aria-labelledby="confirm-modal-title"
+  >
+    <div class="bg-sheet border border-rule rounded-card max-w-md w-full p-5 sm:p-6">
+      <h3 id="confirm-modal-title" class="font-serif text-xl font-semibold text-ink">
+        Tasdiqlash
+      </h3>
+      <p id="confirm-modal-message" class="text-sm text-muted mt-2 leading-relaxed"></p>
+      <div class="mt-5 pt-4 border-t border-rule flex items-center justify-end gap-2.5">
+        <button
+          type="button"
+          id="confirm-cancel-btn"
+          class="px-3.5 py-2 text-sm font-medium text-ink bg-paper hover:bg-rule/50 border border-rule rounded-ctrl transition-colors cursor-pointer"
+        >
+          Bekor qilish
+        </button>
+        <button
+          type="button"
+          id="confirm-ok-btn"
+          class="px-3.5 py-2 text-sm font-medium text-sheet bg-terracotta hover:bg-terracotta/90 rounded-ctrl transition-colors cursor-pointer"
+        >
+          Tasdiqlash
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Toast xabarnoma konteyneri (pastki o'ng burchak) -->
+  <div
+    id="toast-container"
+    class="fixed bottom-4 right-4 z-50 flex flex-col gap-2 max-w-sm w-[calc(100vw-2rem)] pointer-events-none"
+    aria-live="polite"
+  ></div>
+
+  <!-- Ilova mantiqi (JavaScript) -->
+  <script>
+    (function () {
+      'use strict';
+
+      // =========================================================================
+      // 1. YORDAMCHI FUNKSIYALAR (Sana formatlash va XSS himoyasi)
+      // =========================================================================
+
+      /**
+       * Bugungi yoki berilgan kundan offset kun oldingi sanani YYYY-MM-DD formatida qaytaradi
+       */
+      function getISODate(daysOffset = 0) {
+        const date = new Date();
+        date.setDate(date.getDate() + daysOffset);
+        const year = date.getFullYear();
+        const month = String(date.getMonth() + 1).padStart(2, '0');
+        const day = String(date.getDate()).padStart(2, '0');
+        return `${year}-${month}-${day}`;
+      }
+
+      /**
+       * HTML maxsus belgilarini xavfsiz holatga keltiradi
+       */
+      function escapeHTML(str) {
+        return String(str)
+          .replace(/&/g, '&amp;')
+          .replace(/</g, '&lt;')
+          .replace(/>/g, '&gt;')
+          .replace(/"/g, '&quot;')
+          .replace(/'/g, '&#39;');
+      }
+
+      // =========================================================================
+      // 2. MA'LUMOTLAR MODELI VA BOSHLANG'ICH NAMUNA (Django modellariga mos)
+      // =========================================================================
+      const STORAGE_KEY = 'kutubxona_kartotekasi_v1';
+
+      function createSeedData() {
+        return {
+          // 1. Book modeli: { id, title, author, quantity }
+          books: [
+            { id: 1, title: 'O‘tkan kunlar', author: 'Abdulla Qodiriy', quantity: 3 },
+            { id: 2, title: 'Shaytanat', author: 'Tohir Malik', quantity: 2 },
+            { id: 3, title: 'Sariq devni minib', author: 'Xudoyberdi To‘xtaboyev', quantity: 4 },
+            { id: 4, title: 'Farhod va Shirin', author: 'Alisher Navoiy', quantity: 1 },
+          ],
+          // 2. Member modeli: { id, name, phone }
+          members: [
+            { id: 1, name: 'Azizbek Karimov', phone: '+998 90 123 45 67' },
+            { id: 2, name: 'Madina Rustamova', phone: '+998 93 765 43 21' },
+            { id: 3, name: 'Javohir Alimov', phone: '+998 99 456 78 90' },
+          ],
+          // 3. Borrow modeli: { id, bookId, memberId, borrow_date, is_returned }
+          borrows: [
+            {
+              id: 1,
+              bookId: 1, // O‘tkan kunlar
+              memberId: 1, // Azizbek Karimov
+              borrow_date: getISODate(0), // Bugungi sana
+              is_returned: false,
+            },
+            {
+              id: 2,
+              bookId: 2, // Shaytanat
+              memberId: 2, // Madina Rustamova
+              borrow_date: getISODate(-3), // 3 kun oldingi sana
+              is_returned: true,
+            },
+          ],
+        };
+      }
+
+      /**
+       * localStorage'dan ma'lumotlarni yuklaydi, yo'q bo'lsa namuna ma'lumotlarni saqlaydi
+       */
+      function loadState() {
+        try {
+          const raw = localStorage.getItem(STORAGE_KEY);
+          if (raw) {
+            const parsed = JSON.parse(raw);
+            if (
+              Array.isArray(parsed.books) &&
+              Array.isArray(parsed.members) &&
+              Array.isArray(parsed.borrows)
+            ) {
+              return parsed;
+            }
+          }
+        } catch (err) {
+          console.warn('localStorage o‘qishda xatolik:', err);
+        }
+        const seed = createSeedData();
+        saveState(seed);
+        return seed;
+      }
+
+      /**
+       * Joriy holatni localStorage'ga saqlaydi
+       */
+      function saveState(data) {
+        try {
+          localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
+        } catch (err) {
+          console.warn('localStorage saqlashda xatolik:', err);
+        }
+      }
+
+      /**
+       * Yangi yozuv uchun keyingi noyob ID raqamini qaytaradi
+       */
+      function nextId(collection) {
+        if (!collection.length) return 1;
+        return Math.max(...collection.map((item) => item.id)) + 1;
+      }
+
+      // Ilova holati
+      let db = loadState();
+      let activeTab = 'borrows';
+      let borrowFilter = 'all'; // 'all' | 'active' | 'returned'
+      let searchQueries = {
+        borrows: '',
+        books: '',
+        members: '',
+      };
+
+      // =========================================================================
+      // 3. TOAST XABARNOMA VA TASDIQLASH MODALI
+      // =========================================================================
+
+      /**
+       * Pastki o'ng burchakda ixcham xabarnoma ko'rsatadi
+       * @param {string} message - Xabar matni
+       * @param {'success'|'warning'|'info'} type - Xabar turi
+       */
+      function showToast(message, type = 'success') {
+        const container = document.getElementById('toast-container');
+        const toast = document.createElement('div');
+
+        const accentBorder =
+          type === 'warning'
+            ? 'border-l-terracotta'
+            : type === 'info'
+            ? 'border-l-ink'
+            : 'border-l-forest';
+
+        const iconColor =
+          type === 'warning'
+            ? 'text-terracotta'
+            : type === 'info'
+            ? 'text-ink'
+            : 'text-forest';
+
+        const iconSvg =
+          type === 'warning'
+            ? '<svg class="w-4 h-4 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>'
+            : '<svg class="w-4 h-4 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>';
+
+        toast.className = `pointer-events-auto flex items-start gap-2.5 bg-sheet border border-rule border-l-4 ${accentBorder} rounded-ctrl px-3.5 py-3 text-sm text-ink transition-all duration-200 opacity-0 translate-y-2`;
+        toast.innerHTML = `
+          <span class="mt-0.5 ${iconColor}">${iconSvg}</span>
+          <span class="leading-snug">${escapeHTML(message)}</span>
+        `;
+
+        container.appendChild(toast);
+
+        // Silliq paydo bo'lish
+        requestAnimationFrame(() => {
+          toast.classList.remove('opacity-0', 'translate-y-2');
+        });
+
+        // 3.4 soniyadan keyin yo'qolish
+        setTimeout(() => {
+          toast.classList.add('opacity-0', 'translate-y-2');
+          setTimeout(() => toast.remove(), 220);
+        }, 3400);
+      }
+
+      // Tasdiqlash modali mantiqi
+      let confirmCallback = null;
+      const confirmModal = document.getElementById('confirm-modal');
+      const confirmTitleEl = document.getElementById('confirm-modal-title');
+      const confirmMsgEl = document.getElementById('confirm-modal-message');
+      const confirmOkBtn = document.getElementById('confirm-ok-btn');
+      const confirmCancelBtn = document.getElementById('confirm-cancel-btn');
+
+      function openConfirmModal(title, message, okLabel, onConfirm) {
+        confirmTitleEl.textContent = title;
+        confirmMsgEl.textContent = message;
+        confirmOkBtn.textContent = okLabel || 'Tasdiqlash';
+        confirmCallback = onConfirm;
+        confirmModal.classList.remove('hidden');
+        confirmModal.classList.add('flex');
+      }
+
+      function closeConfirmModal() {
+        confirmModal.classList.add('hidden');
+        confirmModal.classList.remove('flex');
+        confirmCallback = null;
+      }
+
+      confirmCancelBtn.addEventListener('click', closeConfirmModal);
+      confirmModal.addEventListener('click', (e) => {
+        if (e.target === confirmModal) closeConfirmModal();
+      });
+      confirmOkBtn.addEventListener('click', () => {
+        const cb = confirmCallback;
+        closeConfirmModal();
+        if (typeof cb === 'function') cb();
+      });
+
+      // =========================================================================
+      // 4. RENDER FUNKSIYALARI
+      // =========================================================================
+
+      /**
+       * Yuqori statistika va tab nishonlarini yangilaydi
+       */
+      function renderStats() {
+        const totalTitles = db.books.length;
+        const totalCopies = db.books.reduce((sum, b) => sum + Number(b.quantity || 0), 0);
+        const totalMembers = db.members.length;
+        const activeBorrows = db.borrows.filter((br) => !br.is_returned).length;
+
+        document.getElementById('stat-book-titles').textContent = totalTitles;
+        document.getElementById('stat-book-copies').textContent = totalCopies;
+        document.getElementById('stat-members').textContent = totalMembers;
+        document.getElementById('stat-active-borrows').textContent = activeBorrows;
+
+        document.getElementById('badge-active-borrows').textContent = activeBorrows;
+        document.getElementById('badge-books').textContent = totalTitles;
+        document.getElementById('badge-members').textContent = totalMembers;
+      }
+
+      /**
+       * "Kitob berish" formasidagi select ro'yxatlarini yangilaydi
+       */
+      function renderBorrowSelects() {
+        const memberSelect = document.getElementById('borrow-member-select');
+        const bookSelect = document.getElementById('borrow-book-select');
+
+        const prevMember = memberSelect.value;
+        const prevBook = bookSelect.value;
+
+        // O'quvchilar ro'yxati
+        if (db.members.length === 0) {
+          memberSelect.innerHTML = '<option value="">Avval o‘quvchi qo‘shing</option>';
+        } else {
+          memberSelect.innerHTML =
+            '<option value="">O‘quvchini tanlang...</option>' +
+            db.members
+              .map(
+                (m) =>
+                  `<option value="${m.id}">${escapeHTML(m.name)} (${escapeHTML(m.phone)})</option>`
+              )
+              .join('');
+          if (db.members.some((m) => String(m.id) === prevMember)) {
+            memberSelect.value = prevMember;
+          }
+        }
+
+        // Kitoblar ro'yxati (0 nusxali kitoblar disabled qilinadi)
+        if (db.books.length === 0) {
+          bookSelect.innerHTML = '<option value="">Avval kitob qo‘shing</option>';
+        } else {
+          bookSelect.innerHTML =
+            '<option value="">Kitobni tanlang...</option>' +
+            db.books
+              .map((b) => {
+                const disabled = b.quantity <= 0 ? 'disabled' : '';
+                const stockText = b.quantity > 0 ? `${b.quantity} dona` : 'Mavjud emas';
+                return `<option value="${b.id}" ${disabled}>${escapeHTML(b.title)} — ${escapeHTML(b.author)} (${stockText})</option>`;
+              })
+              .join('');
+          if (db.books.some((b) => String(b.id) === prevBook && b.quantity > 0)) {
+            bookSelect.value = prevBook;
+          }
+        }
+      }
+
+      /**
+       * Ijara jurnali jadvalini chizadi
+       */
+      function renderBorrowsTable() {
+        const tbody = document.getElementById('borrows-table-body');
+        const query = searchQueries.borrows.trim().toLowerCase();
+
+        // Eng yangi va faol ijaralarni yuqoriroqda ko'rsatish
+        const filtered = [...db.borrows]
+          .sort((a, b) => {
+            if (a.is_returned !== b.is_returned) return a.is_returned ? 1 : -1;
+            return b.id - a.id;
+          })
+          .filter((br) => {
+            if (borrowFilter === 'active' && br.is_returned) return false;
+            if (borrowFilter === 'returned' && !br.is_returned) return false;
+
+            if (!query) return true;
+            const book = db.books.find((b) => b.id === br.bookId);
+            const member = db.members.find((m) => m.id === br.memberId);
+            const haystack = [
+              book ? book.title : '',
+              book ? book.author : '',
+              member ? member.name : '',
+              member ? member.phone : '',
+              br.borrow_date,
+            ]
+              .join(' ')
+              .toLowerCase();
+            return haystack.includes(query);
+          });
+
+        if (filtered.length === 0) {
+          tbody.innerHTML = `
+            <tr>
+              <td colspan="5" class="py-10 px-4 text-center text-sm text-muted">
+                Ushbu mezon bo‘yicha ijara yozuvlari topilmadi.
+              </td>
+            </tr>
+          `;
+          return;
+        }
+
+        tbody.innerHTML = filtered
+          .map((br) => {
+            const book = db.books.find((b) => b.id === br.bookId);
+            const member = db.members.find((m) => m.id === br.memberId);
+
+            const bookTitle = book ? escapeHTML(book.title) : 'O‘chirilgan kitob';
+            const bookAuthor = book ? escapeHTML(book.author) : '';
+            const memberName = member ? escapeHTML(member.name) : 'O‘chirilgan o‘quvchi';
+            const memberPhone = member ? escapeHTML(member.phone) : '';
+
+            const statusBadge = br.is_returned
+              ? `<span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-ctrl text-xs font-medium bg-forest-soft text-forest">
+                   <span class="w-1.5 h-1.5 rounded-full bg-forest"></span>
+                   Qaytarildi
+                 </span>`
+              : `<span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-ctrl text-xs font-medium bg-terracotta-soft text-terracotta">
+                   <span class="w-1.5 h-1.5 rounded-full bg-terracotta"></span>
+                   Qo‘lda
+                 </span>`;
+
+            const actionCell = br.is_returned
+              ? `<span class="text-xs text-muted inline-flex items-center gap-1">
+                   <svg class="w-3.5 h-3.5 text-forest" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+                   Yopilgan
+                 </span>`
+              : `<button
+                   type="button"
+                   data-return-id="${br.id}"
+                   class="return-btn inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-forest bg-forest-soft/70 hover:bg-forest hover:text-sheet border border-forest/25 rounded-ctrl transition-colors cursor-pointer whitespace-nowrap"
+                 >
+                   <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                     <polyline points="9 14 4 9 9 4" />
+                     <path d="M20 20v-7a4 4 0 0 0-4-4H4" />
+                   </svg>
+                   <span>Qaytarildi deb belgilash</span>
+                 </button>`;
+
+            return `
+              <tr class="hover:bg-paper/50 transition-colors">
+                <td class="py-3.5 px-4 align-top">
+                  <div class="font-medium text-ink">${memberName}</div>
+                  ${memberPhone ? `<div class="text-xs font-mono text-muted mt-0.5">${memberPhone}</div>` : ''}
+                </td>
+                <td class="py-3.5 px-4 align-top">
+                  <div class="font-medium text-ink">${bookTitle}</div>
+                  ${bookAuthor ? `<div class="text-xs text-muted mt-0.5">${bookAuthor}</div>` : ''}
+                </td>
+                <td class="py-3.5 px-4 align-top font-mono text-xs text-muted whitespace-nowrap">
+                  ${escapeHTML(br.borrow_date)}
+                </td>
+                <td class="py-3.5 px-4 align-top whitespace-nowrap">
+                  ${statusBadge}
+                </td>
+                <td class="py-3.5 px-4 align-top text-right whitespace-nowrap">
+                  ${actionCell}
+                </td>
+              </tr>
+            `;
+          })
+          .join('');
+      }
+
+      /**
+       * Kitoblar fondi jadvalini chizadi
+       */
+      function renderBooksTable() {
+        const tbody = document.getElementById('books-table-body');
+        const query = searchQueries.books.trim().toLowerCase();
+
+        const filtered = db.books.filter((b) => {
+          if (!query) return true;
+          return (
+            b.title.toLowerCase().includes(query) ||
+            b.author.toLowerCase().includes(query)
+          );
+        });
+
+        if (filtered.length === 0) {
+          tbody.innerHTML = `
+            <tr>
+              <td colspan="4" class="py-10 px-4 text-center text-sm text-muted">
+                Qidiruv bo‘yicha kitoblar topilmadi.
+              </td>
+            </tr>
+          `;
+          return;
+        }
+
+        tbody.innerHTML = filtered
+          .map((b) => {
+            const activeCount = db.borrows.filter(
+              (br) => br.bookId === b.id && !br.is_returned
+            ).length;
+
+            const qtyColor = b.quantity === 0 ? 'text-terracotta' : 'text-ink';
+            const decDisabled = b.quantity <= 0 ? 'disabled opacity-40 cursor-not-allowed' : 'hover:bg-paper cursor-pointer';
+
+            return `
+              <tr class="hover:bg-paper/50 transition-colors">
+                <td class="py-3.5 px-4 align-middle">
+                  <div class="font-medium text-ink">${escapeHTML(b.title)}</div>
+                  ${
+                    activeCount > 0
+                      ? `<div class="text-[11px] text-terracotta mt-0.5">Hozir ${activeCount} nusxa qo‘lda</div>`
+                      : ''
+                  }
+                </td>
+                <td class="py-3.5 px-4 align-middle text-muted">
+                  ${escapeHTML(b.author)}
+                </td>
+                <td class="py-3.5 px-4 align-middle whitespace-nowrap">
+                  <div class="inline-flex items-center border border-rule rounded-ctrl bg-sheet">
+                    <button
+                      type="button"
+                      data-qty-id="${b.id}"
+                      data-qty-delta="-1"
+                      ${decDisabled}
+                      aria-label="Nusxani kamaytirish"
+                      class="qty-btn w-7 h-7 inline-flex items-center justify-center text-muted hover:text-ink border-r border-rule transition-colors"
+                    >
+                      <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="5" y1="12" x2="19" y2="12"/></svg>
+                    </button>
+                    <span class="font-mono text-sm font-medium px-3 min-w-[2.5rem] text-center ${qtyColor}">
+                      ${b.quantity}
+                    </span>
+                    <button
+                      type="button"
+                      data-qty-id="${b.id}"
+                      data-qty-delta="1"
+                      aria-label="Nusxani oshirish"
+                      class="qty-btn w-7 h-7 inline-flex items-center justify-center text-muted hover:text-ink hover:bg-paper border-l border-rule transition-colors cursor-pointer"
+                    >
+                      <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+                    </button>
+                  </div>
+                </td>
+                <td class="py-3.5 px-4 align-middle text-right whitespace-nowrap">
+                  <button
+                    type="button"
+                    data-delete-book-id="${b.id}"
+                    class="delete-book-btn inline-flex items-center gap-1 px-2.5 py-1.5 text-xs font-medium text-muted hover:text-terracotta hover:bg-terracotta-soft/70 border border-transparent hover:border-terracotta/20 rounded-ctrl transition-colors cursor-pointer"
+                  >
+                    <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">
+                      <polyline points="3 6 5 6 21 6" />
+                      <path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6" />
+                      <path d="M10 11v6" />
+                      <path d="M14 11v6" />
+                    </svg>
+                    <span>O‘chirish</span>
+                  </button>
+                </td>
+              </tr>
+            `;
+          })
+          .join('');
+      }
+
+      /**
+       * O'quvchilar jadvalini chizadi
+       */
+      function renderMembersTable() {
+        const tbody = document.getElementById('members-table-body');
+        const query = searchQueries.members.trim().toLowerCase();
+
+        const filtered = db.members.filter((m) => {
+          if (!query) return true;
+          return (
+            m.name.toLowerCase().includes(query) ||
+            m.phone.toLowerCase().includes(query)
+          );
+        });
+
+        if (filtered.length === 0) {
+          tbody.innerHTML = `
+            <tr>
+              <td colspan="4" class="py-10 px-4 text-center text-sm text-muted">
+                Qidiruv bo‘yicha o‘quvchilar topilmadi.
+              </td>
+            </tr>
+          `;
+          return;
+        }
+
+        tbody.innerHTML = filtered
+          .map((m) => {
+            const activeCount = db.borrows.filter(
+              (br) => br.memberId === m.id && !br.is_returned
+            ).length;
+
+            const badge =
+              activeCount > 0
+                ? `<span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-ctrl text-xs font-mono font-medium bg-terracotta-soft text-terracotta">
+                     ${activeCount} ta kitob
+                   </span>`
+                : `<span class="inline-flex items-center px-2.5 py-1 rounded-ctrl text-xs font-mono text-muted bg-paper border border-rule">
+                     0
+                   </span>`;
+
+            return `
+              <tr class="hover:bg-paper/50 transition-colors">
+                <td class="py-3.5 px-4 align-middle font-medium text-ink">
+                  ${escapeHTML(m.name)}
+                </td>
+                <td class="py-3.5 px-4 align-middle font-mono text-xs text-muted whitespace-nowrap">
+                  ${escapeHTML(m.phone)}
+                </td>
+                <td class="py-3.5 px-4 align-middle whitespace-nowrap">
+                  ${badge}
+                </td>
+                <td class="py-3.5 px-4 align-middle text-right whitespace-nowrap">
+                  <button
+                    type="button"
+                    data-delete-member-id="${m.id}"
+                    class="delete-member-btn inline-flex items-center gap-1 px-2.5 py-1.5 text-xs font-medium text-muted hover:text-terracotta hover:bg-terracotta-soft/70 border border-transparent hover:border-terracotta/20 rounded-ctrl transition-colors cursor-pointer"
+                  >
+                    <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">
+                      <polyline points="3 6 5 6 21 6" />
+                      <path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6" />
+                      <path d="M10 11v6" />
+                      <path d="M14 11v6" />
+                    </svg>
+                    <span>O‘chirish</span>
+                  </button>
+                </td>
+              </tr>
+            `;
+          })
+          .join('');
+      }
+
+      /**
+       * Barcha ko'rinishlarni birgalikda yangilaydi
+       */
+      function renderAll() {
+        renderStats();
+        renderBorrowSelects();
+        renderBorrowsTable();
+        renderBooksTable();
+        renderMembersTable();
+      }
+
+      // =========================================================================
+      // 5. HODISALAR (TABLAR, FORMALAR, JADVAL AMALLARI)
+      // =========================================================================
+
+      // Tab almashtirish
+      document.querySelectorAll('.tab-btn').forEach((btn) => {
+        btn.addEventListener('click', () => {
+          activeTab = btn.dataset.tab;
+
+          document.querySelectorAll('.tab-btn').forEach((b) => {
+            const isActive = b.dataset.tab === activeTab;
+            b.setAttribute('aria-selected', String(isActive));
+            b.classList.toggle('border-forest', isActive);
+            b.classList.toggle('text-forest', isActive);
+            b.classList.toggle('border-transparent', !isActive);
+            b.classList.toggle('text-muted', !isActive);
+          });
+
+          document.querySelectorAll('.tab-panel').forEach((panel) => {
+            panel.classList.toggle('hidden', panel.id !== `panel-${activeTab}`);
+          });
+        });
+      });
+
+      // Ijara holati bo'yicha filtr
+      document.querySelectorAll('.borrow-filter-btn').forEach((btn) => {
+        btn.addEventListener('click', () => {
+          borrowFilter = btn.dataset.filter;
+          document.querySelectorAll('.borrow-filter-btn').forEach((b) => {
+            const isSelected = b.dataset.filter === borrowFilter;
+            b.classList.toggle('bg-sheet', isSelected);
+            b.classList.toggle('text-ink', isSelected);
+            b.classList.toggle('border-rule', isSelected);
+            b.classList.toggle('text-muted', !isSelected);
+            b.classList.toggle('border-transparent', !isSelected);
+          });
+          renderBorrowsTable();
+        });
+      });
+
+      // Qidiruv maydonlari
+      document.getElementById('borrow-search').addEventListener('input', (e) => {
+        searchQueries.borrows = e.target.value;
+        renderBorrowsTable();
+      });
+
+      document.getElementById('book-search').addEventListener('input', (e) => {
+        searchQueries.books = e.target.value;
+        renderBooksTable();
+      });
+
+      document.getElementById('member-search').addEventListener('input', (e) => {
+        searchQueries.members = e.target.value;
+        renderMembersTable();
+      });
+
+      // --- 1. Kitobni ijaraga berish (Borrow yaratish) ---
+      document.getElementById('borrow-form').addEventListener('submit', (e) => {
+        e.preventDefault();
+        const memberId = Number(document.getElementById('borrow-member-select').value);
+        const bookId = Number(document.getElementById('borrow-book-select').value);
+
+        if (!memberId || !bookId) {
+          showToast('Iltimos, o‘quvchi va kitobni tanlang.', 'warning');
+          return;
+        }
+
+        const book = db.books.find((b) => b.id === bookId);
+        const member = db.members.find((m) => m.id === memberId);
+
+        if (!book || !member) {
+          showToast('Tanlangan ma’lumot topilmadi.', 'warning');
+          return;
+        }
+
+        if (book.quantity <= 0) {
+          showToast('Ushbu kitobdan hozircha bo‘sh nusxa qolmagan.', 'warning');
+          return;
+        }
+
+        // Kitob sonini 1 taga kamaytirish va yangi ijara yozuvi qo'shish
+        book.quantity -= 1;
+        db.borrows.push({
+          id: nextId(db.borrows),
+          bookId: book.id,
+          memberId: member.id,
+          borrow_date: getISODate(0),
+          is_returned: false,
+        });
+
+        saveState(db);
+        renderAll();
+        e.target.reset();
+        showToast(`“${book.title}” kitobi ${member.name}ga ijaraga berildi.`, 'success');
+      });
+
+      // --- 2. Kitobni qaytarildi deb belgilash ---
+      document.getElementById('borrows-table-body').addEventListener('click', (e) => {
+        const btn = e.target.closest('.return-btn');
+        if (!btn) return;
+
+        const borrowId = Number(btn.dataset.returnId);
+        const record = db.borrows.find((br) => br.id === borrowId);
+        if (!record || record.is_returned) return;
+
+        record.is_returned = true;
+        const book = db.books.find((b) => b.id === record.bookId);
+        if (book) {
+          book.quantity += 1;
+        }
+
+        saveState(db);
+        renderAll();
+        showToast(
+          book
+            ? `“${book.title}” qaytarildi. Fonddagi nusxa soni +1 ga oshdi.`
+            : 'Ijara yozuvi qaytarildi deb belgilandi.',
+          'success'
+        );
+      });
+
+      // --- 3. Yangi kitob qo'shish (Book yaratish) ---
+      document.getElementById('book-form').addEventListener('submit', (e) => {
+        e.preventDefault();
+        const titleInput = document.getElementById('book-title');
+        const authorInput = document.getElementById('book-author');
+        const qtyInput = document.getElementById('book-quantity');
+
+        const title = titleInput.value.trim();
+        const author = authorInput.value.trim();
+        const quantity = Math.max(0, parseInt(qtyInput.value, 10) || 0);
+
+        if (!title || !author) {
+          showToast('Kitob nomi va muallifni kiriting.', 'warning');
+          return;
+        }
+
+        db.books.push({
+          id: nextId(db.books),
+          title,
+          author,
+          quantity,
+        });
+
+        saveState(db);
+        renderAll();
+        e.target.reset();
+        qtyInput.value = '1';
+        showToast(`“${title}” kitobi fondga qo‘shildi.`, 'success');
+      });
+
+      // --- 4. Kitob sonini o'zgartirish (+ / -) va kitobni o'chirish ---
+      document.getElementById('books-table-body').addEventListener('click', (e) => {
+        // Nusxa sonini oshirish/kamaytirish
+        const qtyBtn = e.target.closest('.qty-btn');
+        if (qtyBtn && !qtyBtn.disabled) {
+          const bookId = Number(qtyBtn.dataset.qtyId);
+          const delta = Number(qtyBtn.dataset.qtyDelta);
+          const book = db.books.find((b) => b.id === bookId);
+          if (!book) return;
+
+          const updated = book.quantity + delta;
+          if (updated < 0) return;
+
+          book.quantity = updated;
+          saveState(db);
+          renderAll();
+          showToast(`“${book.title}” mavjud nusxalari: ${book.quantity} dona.`, 'info');
+          return;
+        }
+
+        // Kitobni o'chirish
+        const delBtn = e.target.closest('.delete-book-btn');
+        if (delBtn) {
+          const bookId = Number(delBtn.dataset.deleteBookId);
+          const book = db.books.find((b) => b.id === bookId);
+          if (!book) return;
+
+          // Faol ijarada bor-yo'qligini tekshirish
+          const activeCount = db.borrows.filter(
+            (br) => br.bookId === bookId && !br.is_returned
+          ).length;
+
+          if (activeCount > 0) {
+            showToast(
+              `“${book.title}” kitobini o‘chirib bo‘lmaydi: hozir ${activeCount} nusxa o‘quvchilar qo‘lida.`,
+              'warning'
+            );
+            return;
+          }
+
+          openConfirmModal(
+            'Kitobni o‘chirish',
+            `“${book.title}” (${book.author}) kitobini katalogdan butunlay o‘chirmoqchimisiz?`,
+            'O‘chirish',
+            () => {
+              db.books = db.books.filter((b) => b.id !== bookId);
+              // Django on_delete=models.CASCADE kabi bog'liq yopilgan yozuvlarni tozalash
+              db.borrows = db.borrows.filter((br) => br.bookId !== bookId);
+              saveState(db);
+              renderAll();
+              showToast(`“${book.title}” fonddan o‘chirildi.`, 'info');
+            }
+          );
+        }
+      });
+
+      // --- 5. Yangi o'quvchi qo'shish (Member yaratish) ---
+      document.getElementById('member-form').addEventListener('submit', (e) => {
+        e.preventDefault();
+        const nameInput = document.getElementById('member-name');
+        const phoneInput = document.getElementById('member-phone');
+
+        const name = nameInput.value.trim();
+        const phone = phoneInput.value.trim();
+
+        if (!name || !phone) {
+          showToast('Ism familiya va telefon raqamini kiriting.', 'warning');
+          return;
+        }
+
+        db.members.push({
+          id: nextId(db.members),
+          name,
+          phone,
+        });
+
+        saveState(db);
+        renderAll();
+        e.target.reset();
+        showToast(`${name} o‘quvchilar ro‘yxatiga qo‘shildi.`, 'success');
+      });
+
+      // --- 6. O'quvchini o'chirish ---
+      document.getElementById('members-table-body').addEventListener('click', (e) => {
+        const delBtn = e.target.closest('.delete-member-btn');
+        if (!delBtn) return;
+
+        const memberId = Number(delBtn.dataset.deleteMemberId);
+        const member = db.members.find((m) => m.id === memberId);
+        if (!member) return;
+
+        const activeCount = db.borrows.filter(
+          (br) => br.memberId === memberId && !br.is_returned
+        ).length;
+
+        if (activeCount > 0) {
+          showToast(
+            `${member.name}ni o‘chirib bo‘lmaydi: qo‘lida ${activeCount} ta qaytarilmagan kitob bor.`,
+            'warning'
+          );
+          return;
+        }
+
+        openConfirmModal(
+          'O‘quvchini o‘chirish',
+          `${member.name} (${member.phone}) ma’lumotlarini reestrdan o‘chirmoqchimisiz?`,
+          'O‘chirish',
+          () => {
+            db.members = db.members.filter((m) => m.id !== memberId);
+            // Django on_delete=models.CASCADE mantiqiga mos ravishda tarixiy yozuvlarni tozalash
+            db.borrows = db.borrows.filter((br) => br.memberId !== memberId);
+            saveState(db);
+            renderAll();
+            showToast(`${member.name} ro‘yxatdan o‘chirildi.`, 'info');
+          }
+        );
+      });
+
+      // --- 7. Boshlang'ich namuna ma'lumotlarini tiklash ---
+      document.getElementById('reset-demo-btn').addEventListener('click', () => {
+        openConfirmModal(
+          'Namuna ma’lumotlarini tiklash',
+          'Barcha joriy o‘zgarishlar o‘chiriladi va boshlang‘ich kutubxona ma’lumotlari qayta yuklanadi. Davom etasizmi?',
+          'Tiklash',
+          () => {
+            db = createSeedData();
+            saveState(db);
+            renderAll();
+            showToast('Boshlang‘ich namuna ma’lumotlari tiklandi.', 'info');
+          }
+        );
+      });
+
+      // =========================================================================
+      // 6. BOSHLANG'ICH ISHGA TUSHIRISH
+      // =========================================================================
+      document.getElementById('today-date-label').textContent = `Sana: ${getISODate(0)}`;
+      renderAll();
+    })();
+  </script>
+</body>
+</html>
